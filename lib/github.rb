@@ -2,22 +2,23 @@ require_relative "github-graphql"
 
 module Github
   def self.pull_request_by_number(org, repo, pr_number)
-    pr = GithubGraphql::PullRequest.by_number(org, repo, pr_number).repository.pull_request
+    data = GithubGraphql.get_pull_request_by_number(org, repo, pr_number)
+    pr = data["data"]["repository"]["pullRequest"]
 
-    result = pr.to_h.select do |k, v|
+    result = pr.select do |k, v|
       %w(id url number headRefName title createdAt).include? k
     end
-    result["authorId"] = pr.author.id
-    result["authorLogin"] = pr.author.login
-    result["authorName"] = pr.author.name
-    result["author"] = name_and_login(pr.author)
+    result["authorId"] = pr["author"]["id"]
+    result["authorLogin"] = pr["author"]["login"]
+    result["authorName"] = pr["author"]["name"]
+    result["author"] = name_and_login(pr["author"])
 
-    result["reviews"] = pr.reviews.nodes.inject({}) do |reviews, review|
-      reviews.merge({ name_and_login(review.author) => review.state })
+    result["reviews"] = pr["reviews"]["nodes"].inject({}) do |reviews, review|
+      reviews.merge({ name_and_login(review["author"]) => review["state"] })
     end
 
-    result["reviewRequests"] = pr.review_requests.nodes.map do |rr|
-      { "user" => name_and_login(rr.requested_reviewer) }
+    result["reviewRequests"] = pr["reviewRequests"]["nodes"].map do |rr|
+      { "user" => name_and_login(rr["requestedReviewer"]) }
     end
 
     return result
@@ -25,16 +26,19 @@ module Github
 
   ## Returns a list of members {id, login, name}
   def self.team_members(org, team_name)
-    team = GithubGraphql::Team.members(org, team_name).organization.team
-    return nil if team.nil?
+    team = GithubGraphql.get_team_members(org, team_name)
+    return nil if team["data"]["organization"]["team"].nil?
 
-    return team.members.edges.map do |edge|
-      edge.node.to_h
-    end
+    return team["data"]["organization"]["team"]["members"]["edges"].map { |edge| edge["node"] }
+  end
+
+  def self.user_by_login(login)
+    data = GithubGraphql.get_user_by_login(login)
+    return data["data"]["user"]
   end
 
   def self.request_review_on_pull_request(pr_id, user_ids)
-    GithubGraphql::PullRequest.request_review(pr_id, user_ids)
+    GithubGraphql.request_review_on_pull_request(pr_id, user_ids)
   end
 
   def self.puts_pull_request(pr)
@@ -65,10 +69,10 @@ module Github
   end
 
   def self.name_and_login(obj)
-    if obj.name && !obj.name.empty?
-      "#{obj.name} (@#{obj.login})"
+    if obj["name"] && !obj["name"].empty?
+      "#{obj["name"]} (@#{obj["login"]})"
     else
-      "@#{obj.login}"
+      "@#{obj["login"]}"
     end
   end
 end

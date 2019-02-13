@@ -1,25 +1,28 @@
-require "graphql/client"
-require "graphql/client/http"
+require 'net/http'
+require 'uri'
+require 'json'
 
 module GithubGraphql
+  GITHUB_URI = URI("https://api.github.com/graphql")
   GITHUB_ACCESS_TOKEN = ENV['GITHUB_ACCESS_TOKEN']
-  URL = 'https://api.github.com/graphql'
 
-  HttpAdapter = GraphQL::Client::HTTP.new(URL) do
-    def headers(context)
-      {
-        "Authorization" => "Bearer #{GITHUB_ACCESS_TOKEN}",
-        "User-Agent" => 'Ruby'
-      }
-    end
+  def self.query(query, variables)
+    req = Net::HTTP::Post.new(
+      GITHUB_URI,
+      "Content-Type" => "application/json",
+      "Authorization" => "Bearer #{GITHUB_ACCESS_TOKEN}"
+    )
+    req.body = {query: query, variables: variables}.to_json
+
+    res = Net::HTTP.start(
+      GITHUB_URI.hostname, GITHUB_URI.port, :use_ssl => true
+    ) { |http| http.request(req) }
+
+    return JSON.parse(res.body)
   end
 
-  Schema = GraphQL::Client.load_schema(HttpAdapter)
-  Client = GraphQL::Client.new(schema: Schema, execute: HttpAdapter)
-  class QueryExecutionError < StandardError; end
-
-  class Team
-    MembersQuery = GithubGraphql::Client.parse <<-'GRAPHQL'
+  def self.get_team_members(org, team_name)
+    qry = <<-'GRAPHQL'
       query($org: String!, $teamName: String!) {
         organization(login:$org) {
           team(slug:$teamName) {
@@ -37,110 +40,105 @@ module GithubGraphql
       }
     GRAPHQL
 
-    def self.members(org, teamName)
-      response = GithubGraphql::Client.query(MembersQuery, variables: { org: org, teamName: teamName })
-      if response.errors.any?
-        raise QueryExecutionError.new(response.errors[:data].join(", "))
-      else
-        response.data
-      end
-    end
+    vars = {
+      "org": org,
+      "teamName": team_name,
+    }
+
+    return query(qry, vars)
   end
 
-  class User
-    UserProfileQuery = GithubGraphql::Client.parse <<-'GRAPHQL'
-      query($username: String!) {
-        user(login: $username) {
+  def self.get_user_by_login(login)
+    qry = <<-'GRAPHQL'
+      query($login: String!) {
+        user(login: $login) {
           id
           login
           name
         }
       }
     GRAPHQL
-    def self.find(username)
-      response = GithubGraphql::Client.query(UserProfileQuery, variables: { username: username })
-      if response.errors.any?
-        raise QueryExecutionError.new(response.errors[:data].join(", "))
-      else
-        response.data
-      end
-    end
+
+    vars = {
+      "login": login
+    }
+
+    return query(qry, vars)
   end
 
-  class PullRequest
-    PRByNumberQuery = GithubGraphql::Client.parse <<-'GRAPHQL'
-    query($repoOwner: String!, $repoName: String!, $prNumber: Int!) {
-      repository(owner:$repoOwner, name:$repoName) {
-        pullRequest(number:$prNumber) {
-          id
-          url
-          number
-          headRefName
-          title
-          createdAt
-          author {
-            ... on User {
-              id
-              ...userFields
-            }
-          }
-          reviewRequests(last: 100) {
-            nodes {
-              requestedReviewer {
-                ... on User {
-                  ...userFields
-                }
-                ... on Team {
-                  name
-                  login: slug
-                }
-              }
-            }
-          }
-          reviews(last: 100) {
-            nodes {
-              author {
+  def self.get_pull_request_by_number(org, repo, pr_number)
+    qry = <<-'GRAPHQL'
+      query($repoOwner: String!, $repoName: String!, $prNumber: Int!) {
+        repository(owner:$repoOwner, name:$repoName) {
+          pullRequest(number:$prNumber) {
+            id
+            url
+            number
+            headRefName
+            title
+            createdAt
+            author {
+              ... on User {
+                id
                 ...userFields
               }
-              state
+            }
+            reviewRequests(last: 100) {
+              nodes {
+                requestedReviewer {
+                  ... on User {
+                    ...userFields
+                  }
+                  ... on Team {
+                    name
+                    login: slug
+                  }
+                }
+              }
+            }
+            reviews(last: 100) {
+              nodes {
+                author {
+                  ...userFields
+                }
+                state
+              }
             }
           }
         }
       }
-    }
 
-    fragment userFields on User {
-      name
-      login
-    }
-    GRAPHQL
-
-    def self.by_number(repoOwner, repoName, prNumber)
-      response = GithubGraphql::Client.query(PRByNumberQuery, variables: { repoOwner: repoOwner, repoName: repoName, prNumber: prNumber })
-      if response.errors.any?
-        raise QueryExecutionError.new(response.errors[:data].join(", "))
-      else
-        response.data
-      end
-    end
-
-    PRRequestReviewersMutation = GithubGraphql::Client.parse <<-'GRAPHQL'
-    mutation($pullRequestId: ID!, $userIds: [ID!]) {
-      requestReviews(input: { pullRequestId: $pullRequestId, userIds: $userIds, union: true }) {
-        pullRequest {
-          id
-        },
+      fragment userFields on User {
+        name
+        login
       }
-    }
     GRAPHQL
 
-    def self.request_review(pr_id, user_ids)
-      response = GithubGraphql::Client.query(PRRequestReviewersMutation, variables: { pullRequestId: pr_id, userIds: user_ids })
-      if response.errors.any?
-        raise QueryExecutionError.new(response.errors[:data].join(", "))
-      else
-        response.data
-      end
-    end
+    vars = {
+      repoOwner: org,
+      repoName: repo,
+      prNumber: pr_number,
+    }
+
+    return query(qry, vars)
+  end
+
+  def self.request_review_on_pull_request(pr_id, user_ids)
+    qry = <<-'GRAPHQL'
+      mutation($pullRequestId: ID!, $userIds: [ID!]) {
+        requestReviews(input: { pullRequestId: $pullRequestId, userIds: $userIds, union: true }) {
+          pullRequest {
+            id
+          },
+        }
+      }
+    GRAPHQL
+
+    vars = {
+      pullRequestId: pr_id,
+      userIds: user_ids
+    }
+
+    return query(qry, vars)
   end
 end
