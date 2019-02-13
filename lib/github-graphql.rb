@@ -75,6 +75,19 @@ module GithubGraphql
             url
             number
             headRefName
+            commits(last:1){
+              nodes{
+                commit{
+                  status{
+                    state
+                    contexts {
+                      state
+                      context
+                    }
+                  }
+                }
+              }
+            }
             title
             createdAt
             author {
