@@ -3,8 +3,17 @@ require_relative "github-graphql"
 module Github
   def self.pull_request_by_number(org, repo, pr_number)
     data = GithubGraphql.get_pull_request_by_number(org, repo, pr_number)
-    pr = data["data"]["repository"]["pullRequest"]
+    return _pr_data(data["data"]["repository"]["pullRequest"])
+  end
 
+  def self.pull_requests_for_login(login)
+    data = GithubGraphql.get_pull_requests_for_login(login)
+    return data["data"]["search"]["edges"].map do |edge|
+      _pr_data(edge["node"])
+    end
+  end
+
+  def self._pr_data(pr)
     result = pr.select do |k, v|
       %w(id url number headRefName title createdAt).include? k
     end
@@ -42,6 +51,11 @@ module Github
   def self.user_by_login(login)
     data = GithubGraphql.get_user_by_login(login)
     return data["data"]["user"]
+  end
+
+  def self.my_user_login
+    data = GithubGraphql.get_my_user_login()
+    return data["data"]["viewer"]["login"]
   end
 
   def self.request_review_on_pull_request(pr_id, user_ids)
