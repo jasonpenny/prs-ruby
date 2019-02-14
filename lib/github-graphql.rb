@@ -75,6 +75,20 @@ module GithubGraphql
             url
             number
             headRefName
+            mergeable
+            commits(last:1){
+              nodes{
+                commit{
+                  status{
+                    state
+                    contexts {
+                      state
+                      context
+                    }
+                  }
+                }
+              }
+            }
             title
             createdAt
             author {

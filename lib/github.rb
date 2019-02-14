@@ -21,6 +21,13 @@ module Github
       { "user" => name_and_login(rr["requestedReviewer"]) }
     end
 
+    result["canMerge"] = pr["mergeable"] != "CONFLICTING"
+
+    status = pr["commits"]["nodes"][0]["commit"]["status"]
+    if (!status.nil?) && status["state"] == "FAILURE"
+      result["checkFailures"] = status["contexts"].reject { |c| c["state"] == "SUCCESS" }.map { |c| c["context"] }
+    end
+
     return result
   end
 
@@ -44,6 +51,15 @@ module Github
   def self.puts_pull_request(pr)
     puts "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
     puts "#{pr["author"]} #{pr["createdAt"]}"
+
+    if !pr["canMerge"]
+      puts " \e[91m\e[1m✘  Merge Conflict\e[0m"
+    end
+
+    if !pr["checkFailures"].nil?
+      puts " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
+    end
+
     puts ""
 
     pr["reviews"].each do |user, state|
