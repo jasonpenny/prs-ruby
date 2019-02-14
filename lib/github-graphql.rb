@@ -6,13 +6,17 @@ module GithubGraphql
   GITHUB_URI = URI("https://api.github.com/graphql")
   GITHUB_ACCESS_TOKEN = ENV['GITHUB_ACCESS_TOKEN']
 
-  def self.query(query, variables)
+  def self.query(query, variables = nil)
     req = Net::HTTP::Post.new(
       GITHUB_URI,
       "Content-Type" => "application/json",
       "Authorization" => "Bearer #{GITHUB_ACCESS_TOKEN}"
     )
-    req.body = {query: query, variables: variables}.to_json
+    if !variables.nil?
+      req.body = {query: query, variables: variables}.to_json
+    else
+      req.body = {query: query}.to_json
+    end
 
     res = Net::HTTP.start(
       GITHUB_URI.hostname, GITHUB_URI.port, :use_ssl => true
@@ -64,6 +68,18 @@ module GithubGraphql
     }
 
     return query(qry, vars)
+  end
+
+  def self.get_my_user_login
+    qry = <<-'GRAPHQL'
+    query {
+      viewer {
+        login
+      }
+    }
+    GRAPHQL
+
+    return query(qry)
   end
 
   def self.get_pull_request_by_number(org, repo, pr_number)
@@ -132,6 +148,80 @@ module GithubGraphql
       repoOwner: org,
       repoName: repo,
       prNumber: pr_number,
+    }
+
+    return query(qry, vars)
+  end
+
+  def self.get_pull_requests_for_login(login)
+    qry = <<-'GRAPHQL'
+      query($queryString: String!) {
+        search(query:$queryString, type: ISSUE, first: 100) {
+
+          edges {
+            node {
+              ... on PullRequest {
+                id
+                url
+                number
+                headRefName
+                mergeable
+                commits(last:1){
+                  nodes{
+                    commit{
+                      status{
+                        state
+                        contexts {
+                          state
+                          context
+                        }
+                      }
+                    }
+                  }
+                }
+                title
+                createdAt
+                author {
+                  ... on User {
+                    id
+                    ...userFields
+                  }
+                }
+                reviewRequests(last: 100) {
+                  nodes {
+                    requestedReviewer {
+                      ... on User {
+                        ...userFields
+                      }
+                      ... on Team {
+                        name
+                        login: slug
+                      }
+                    }
+                  }
+                }
+                reviews(last: 100) {
+                  nodes {
+                    author {
+                      ...userFields
+                    }
+                    state
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      fragment userFields on User {
+        name
+        login
+      }
+    GRAPHQL
+
+    vars = {
+      queryString: "is:open is:pr author:#{login}"
     }
 
     return query(qry, vars)
