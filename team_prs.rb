@@ -20,15 +20,19 @@ if $PROGRAM_NAME == __FILE__
     $stderr.puts "Team [#{team_name}] could not be found"
     exit(3)
   end
+
+  puts "┌" + ("─" * 79)
+  puts "│   "
   team.each_with_index do |member, i|
     prs = Github.pull_requests_for_login(member["login"])
-    Github.puts_multiple_pull_requests(prs)
+    Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
 
     if !prs.empty? && i < team.size - 1
-      puts ""
-      puts "=" * 80
-      puts ""
+      puts "│   "
+      puts "├" + ("─" * 79)
+      puts "│   "
     end
   end
+  puts "└" + ("─" * 79)
 end
 
