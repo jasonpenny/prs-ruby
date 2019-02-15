@@ -62,6 +62,19 @@ module Github
     GithubGraphql.request_review_on_pull_request(pr_id, user_ids)
   end
 
+  def self.puts_multiple_pull_requests(prs)
+    prs.each_with_index do |pr, i|
+      puts pr["url"]
+      puts_pull_request(pr)
+
+      if i < prs.size - 1
+        puts ""
+        puts "-" * 80
+        puts ""
+      end
+    end
+  end
+
   def self.puts_pull_request(pr)
     puts "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
     puts "#{pr["author"]} #{pr["createdAt"]}"

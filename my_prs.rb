@@ -11,14 +11,5 @@ if $PROGRAM_NAME == __FILE__
   login = Github.my_user_login()
 
   prs = Github.pull_requests_for_login(login)
-  prs.each_with_index do |pr, i|
-    puts pr["url"]
-    Github.puts_pull_request(pr)
-
-    if i < prs.size - 1
-      puts ""
-      puts "-" * 80
-      puts ""
-    end
-  end
+  Github.puts_multiple_pull_requests(prs)
 end
