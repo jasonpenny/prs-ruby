@@ -24,7 +24,8 @@ if $PROGRAM_NAME == __FILE__
   puts "┌" + ("─" * 79)
   puts "│   "
   team.each_with_index do |member, i|
-    prs = Github.pull_requests_for_login(member["login"])
+    prs = Github.pull_requests_for_login(member["login"]).reject { |pr| pr["owner"].downcase != org.downcase }
+
     Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
 
     if !prs.empty? && i < team.size - 1

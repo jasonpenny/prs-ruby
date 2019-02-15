@@ -17,6 +17,7 @@ module Github
     result = pr.select do |k, v|
       %w(id url number headRefName title createdAt).include? k
     end
+    result["owner"] = pr["repository"]["owner"]["login"]
     result["authorId"] = pr["author"]["id"]
     result["authorLogin"] = pr["author"]["login"]
     result["authorName"] = pr["author"]["name"]
