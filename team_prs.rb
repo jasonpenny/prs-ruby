@@ -33,6 +33,6 @@ if $PROGRAM_NAME == __FILE__
       puts "│   "
     end
   end
+  puts "│   "
   puts "└" + ("─" * 79)
 end
-

@@ -70,7 +70,6 @@ module Github
       if i < prs.size - 1
         puts options[:prefix]
         puts options[:prefix]
-        puts options[:prefix]
       end
     end
   end
@@ -91,7 +90,9 @@ module Github
       puts_with_prefix.call " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
     end
 
-    puts_with_prefix.call ""
+    if (!pr["reviews"].empty?) || (!pr["reviewRequests"].empty?)
+      puts_with_prefix.call ""
+    end
 
     pr["reviews"].each do |user, state|
       if state == "APPROVED"
