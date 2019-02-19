@@ -22,7 +22,15 @@ This will output the title, branch, author, created time and reviews and review 
 
 `./my_prs.rb`
 
-This will output all open PRs for the user that owns the GITHUB_ACCESS_TOKEN.
+This will output all open PRs for the user that owns the GITHUB\_ACCESS\_TOKEN.
+
+---
+
+### View open Pull Requests for all members of a github team
+
+`./team_prs.rb <org/team>`
+
+This will output all open PRs for members of the team, for repos that are in the `org`
 
 ---
 
