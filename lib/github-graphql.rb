@@ -88,6 +88,11 @@ module GithubGraphql
         repository(owner:$repoOwner, name:$repoName) {
           pullRequest(number:$prNumber) {
             id
+            repository {
+              owner {
+                login
+              }
+            }
             url
             number
             headRefName
