@@ -162,6 +162,11 @@ module GithubGraphql
             node {
               ... on PullRequest {
                 id
+                repository {
+                  owner {
+                    login
+                  }
+                }
                 url
                 number
                 headRefName

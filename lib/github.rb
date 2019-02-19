@@ -17,6 +17,7 @@ module Github
     result = pr.select do |k, v|
       %w(id url number headRefName title createdAt).include? k
     end
+    result["owner"] = pr["repository"]["owner"]["login"]
     result["authorId"] = pr["author"]["id"]
     result["authorLogin"] = pr["author"]["login"]
     result["authorName"] = pr["author"]["name"]
@@ -62,32 +63,50 @@ module Github
     GithubGraphql.request_review_on_pull_request(pr_id, user_ids)
   end
 
-  def self.puts_pull_request(pr)
-    puts "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
-    puts "#{pr["author"]} #{pr["createdAt"]}"
+  def self.puts_multiple_pull_requests(prs, options = {})
+    prs.each_with_index do |pr, i|
+      puts options[:prefix].nil? ? pr["url"] : options[:prefix] + pr["url"]
+      puts_pull_request(pr, options)
+
+      if i < prs.size - 1
+        puts options[:prefix]
+        puts options[:prefix]
+      end
+    end
+  end
+
+  def self.puts_pull_request(pr, options = {})
+    puts_with_prefix = proc do |prefix, s|
+      puts prefix.nil? ? s : prefix + s
+    end.curry.call(options[:prefix])
+
+    puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
+    puts_with_prefix.call "#{pr["author"]} #{pr["createdAt"]}"
 
     if !pr["canMerge"]
-      puts " \e[91m\e[1m✘  Merge Conflict\e[0m"
+      puts_with_prefix.call " \e[91m\e[1m✘  Merge Conflict\e[0m"
     end
 
     if !pr["checkFailures"].nil?
-      puts " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
+      puts_with_prefix.call " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
     end
 
-    puts ""
+    if (!pr["reviews"].empty?) || (!pr["reviewRequests"].empty?)
+      puts_with_prefix.call ""
+    end
 
     pr["reviews"].each do |user, state|
       if state == "APPROVED"
-        puts " \e[92m\e[1m✔ \e[0m #{user}"
+        puts_with_prefix.call " \e[92m\e[1m✔ \e[0m #{user}"
       elsif state == "CHANGES_REQUESTED"
-        puts " \e[91m\e[1m±\e[0m  #{user}"
+        puts_with_prefix.call " \e[91m\e[1m±\e[0m  #{user}"
       elsif state == "COMMENTED"
-        puts "💬  #{user}"
+        puts_with_prefix.call "💬  #{user}"
       end
     end
 
     pr["reviewRequests"].each do |rr|
-      puts " \e[33m\e[1m●\e[0m  #{rr["user"]}"
+      puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{rr["user"]}"
     end
   end
 
