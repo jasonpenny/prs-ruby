@@ -1,3 +1,4 @@
+require "date"
 require_relative "github-graphql"
 
 module Github
@@ -81,7 +82,7 @@ module Github
     end.curry.call(options[:prefix])
 
     puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
-    puts_with_prefix.call "#{pr["author"]} #{pr["createdAt"]}"
+    puts_with_prefix.call "#{pr["author"]} #{relative_time(pr["createdAt"])} (#{pr["createdAt"]})"
 
     if !pr["canMerge"]
       puts_with_prefix.call " \e[91m\e[1m✘  Merge Conflict\e[0m"
@@ -123,5 +124,36 @@ module Github
     else
       "@#{obj["login"]}"
     end
+  end
+
+  def self.relative_time(dtStr)
+    diff = DateTime.now - DateTime.parse(dtStr)
+    if diff > 30.5
+      return time_ago(diff / 30.5, "month")
+    elsif diff > 1.0
+      return time_ago(diff, "day")
+    end
+
+    diff *= 24.0
+    if diff > 1.5
+      return time_ago(diff, "hour")
+    end
+
+    diff *= 60
+    if diff > 1.0
+      return time_ago(diff, "minute")
+    end
+
+    diff *= 60
+    return time_ago(diff, "second")
+  end
+
+  def self.time_ago(diff, period)
+    df = diff.floor
+    if df != 1
+      period = period + "s"
+    end
+
+    return "#{df} #{period} ago"
   end
 end
