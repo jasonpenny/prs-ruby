@@ -66,7 +66,8 @@ module Github
 
   def self.puts_multiple_pull_requests(prs, options = {})
     prs.each_with_index do |pr, i|
-      puts options[:prefix].nil? ? pr["url"] : options[:prefix] + pr["url"]
+      url = "\e[36m#{pr["url"]}\e[0m"
+      puts options[:prefix].nil? ? url : options[:prefix] + url
       puts_pull_request(pr, options)
 
       if i < prs.size - 1
