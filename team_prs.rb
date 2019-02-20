@@ -23,16 +23,30 @@ if $PROGRAM_NAME == __FILE__
 
   puts "┌" + ("─" * 79)
   puts "│   "
+  no_prs = []
   team.each_with_index do |member, i|
     prs = Github.pull_requests_for_login(member["login"]).reject { |pr| pr["owner"].downcase != org.downcase }
 
-    Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
+    if !prs.empty?
+      Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
+    else
+      no_prs << member
+    end
 
     if !prs.empty? && i < team.size - 1
       puts "│   "
       puts "├" + ("─" * 79)
       puts "│   "
     end
+  end
+
+  no_prs.each_with_index do |member, i|
+      puts "│   " + Github.name_and_login(member)
+      puts "│   " + "No open PRs"
+
+      if i < no_prs.size - 1
+        puts "│   "
+      end
   end
   puts "│   "
   puts "└" + ("─" * 79)
