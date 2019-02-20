@@ -8,13 +8,17 @@ if $PROGRAM_NAME == __FILE__
     exit(1)
   end
 
-  if ARGV.length < 2
+  if ARGV.length < 2 && !ENV["GITHUB_TEAM"]
     puts "Usage: #{__FILE__} <github pull request url> <team name>"
     exit(2)
   end
 
   parsed = Github.parse_pull_request_url(ARGV[0])
-  team_name = ARGV[1]
+  if ARGV.length > 1
+    team_name = Github.parse_org_and_team(ARGV[1])["team_name"]
+  else
+    team_name = Github.parse_org_and_team(ENV["GITHUB_TEAM"])["team_name"]
+  end
 
   pr = Github.pull_request_by_number(parsed["org"], parsed["repo"], parsed["pr_number"].to_i)
 
