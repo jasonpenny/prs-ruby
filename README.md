@@ -5,6 +5,8 @@ These scripts require a [personal access token](https://github.com/settings/toke
 
 - generate one through the Github website
 - `export GITHUB_ACCESS_TOKEN=...`
+- optionally set `GITHUB_TEAM` to avoid having to pass it as a param to the scripts
+`export GITHUB_TEAM=org/team`
 
 ---
 
@@ -28,7 +30,13 @@ This will output all open PRs for the user that owns the GITHUB\_ACCESS\_TOKEN.
 
 ### View open Pull Requests for all members of a github team
 
-`./team_prs.rb <org/team>`
+```sh
+./team_prs.rb <org/team>
+
+# or
+export GITHUB_TEAM=<org/team>
+./team_prs.rb
+```
 
 This will output all open PRs for members of the team, for repos that are in the `org`
 
@@ -36,6 +44,12 @@ This will output all open PRs for members of the team, for repos that are in the
 
 ### Request reviews from individual members of a github team
 
-`./request_review.rb <github pull request url> <team name>`
+```sh
+./request_review.rb <github pull request url> <team name>
+
+# or
+export GITHUB_TEAM=<org/team>
+./request_review.rb <github pull request url>
+```
 
 This will request a review from each member of a github team, so that the first review response does not remove the request from the other members.

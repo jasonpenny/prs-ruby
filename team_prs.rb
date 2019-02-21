@@ -8,14 +8,19 @@ if $PROGRAM_NAME == __FILE__
     exit(1)
   end
 
-  if ARGV.length < 1
+  if ARGV.length < 1 && !ENV["GITHUB_TEAM"]
     puts "Usage: #{__FILE__} <team name as org/team>"
     exit(2)
   end
 
-  org, team = ARGV[0].match(/(.+)\/(.+)/).captures
+  if ARGV.length > 0
+    team_name = ARGV[0]
+  else
+    team_name = ENV["GITHUB_TEAM"]
+  end
+  parsed_team = Github.parse_org_and_team(team_name)
 
-  team = Github.team_members(org, team)
+  team = Github.team_members(parsed_team["org"], parsed_team["team_name"])
   if team.nil?
     $stderr.puts "Team [#{team_name}] could not be found"
     exit(3)
@@ -25,7 +30,7 @@ if $PROGRAM_NAME == __FILE__
   puts "│   "
   no_prs = []
   team.each_with_index do |member, i|
-    prs = Github.pull_requests_for_login(member["login"]).reject { |pr| pr["owner"].downcase != org.downcase }
+    prs = Github.pull_requests_for_login(member["login"]).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
 
     if !prs.empty?
       Github.puts_multiple_pull_requests(prs, { prefix: "│   " })

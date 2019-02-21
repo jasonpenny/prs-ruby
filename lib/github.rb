@@ -45,7 +45,7 @@ module Github
   ## Returns a list of members {id, login, name}
   def self.team_members(org, team_name)
     team = GithubGraphql.get_team_members(org, team_name)
-    return nil if team["data"]["organization"]["team"].nil?
+    return nil if team["data"]["organization"].nil? || team["data"]["organization"]["team"].nil?
 
     return team["data"]["organization"]["team"]["members"]["edges"].map { |edge| edge["node"] }
   end
@@ -117,6 +117,14 @@ module Github
     vals = url.match(/https:\/\/github.com\/(.+)\/(.+)\/pull\/(.+)/).captures
 
     return Hash[keys.zip(vals)]
+  end
+
+  def self.parse_org_and_team(team)
+    keys = ["org", "team_name"]
+    m = team.match(/(.+)\/(.+)/)
+    items = m ? m.captures : ["", team]
+
+    return Hash[keys.zip(items)]
   end
 
   def self.name_and_login(obj)
