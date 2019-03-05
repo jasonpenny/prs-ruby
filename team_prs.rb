@@ -9,7 +9,7 @@ if $PROGRAM_NAME == __FILE__
   end
 
   if ARGV.length < 1 && !ENV["GITHUB_TEAM"]
-    puts "Usage: #{__FILE__} <team name as org/team>"
+    puts "Usage: #{__FILE__} <team name as org/team> <optional extra filters>"
     exit(2)
   end
 
@@ -18,6 +18,12 @@ if $PROGRAM_NAME == __FILE__
   else
     team_name = ENV["GITHUB_TEAM"]
   end
+  if ARGV.length > 1
+    extra_filters = ARGV[1]
+  else
+    extra_filters = ""
+  end
+
   parsed_team = Github.parse_org_and_team(team_name)
 
   team = Github.team_members(parsed_team["org"], parsed_team["team_name"])
@@ -30,7 +36,7 @@ if $PROGRAM_NAME == __FILE__
   puts "│   "
   no_prs = []
   team.each_with_index do |member, i|
-    prs = Github.pull_requests_for_login(member["login"]).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
+    prs = Github.pull_requests_for_login(member["login"], extra_filters).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
 
     if !prs.empty?
       Github.puts_multiple_pull_requests(prs, { prefix: "│   " })

@@ -7,8 +7,8 @@ module Github
     return _pr_data(data["data"]["repository"]["pullRequest"])
   end
 
-  def self.pull_requests_for_login(login)
-    data = GithubGraphql.get_pull_requests_for_login(login)
+  def self.pull_requests_for_login(login, extra_filters)
+    data = GithubGraphql.get_pull_requests_for_login(login, extra_filters)
     return data["data"]["search"]["edges"].map do |edge|
       _pr_data(edge["node"])
     end
