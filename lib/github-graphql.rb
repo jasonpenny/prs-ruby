@@ -96,6 +96,7 @@ module GithubGraphql
             url
             number
             headRefName
+            baseRefName
             mergeable
             commits(last:1){
               nodes{
@@ -175,6 +176,7 @@ module GithubGraphql
                 url
                 number
                 headRefName
+                baseRefName
                 mergeable
                 commits(last:1){
                   nodes{
