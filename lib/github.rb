@@ -16,7 +16,7 @@ module Github
 
   def self._pr_data(pr)
     result = pr.select do |k, v|
-      %w(id url number headRefName title createdAt).include? k
+      %w(id url number headRefName baseRefName title createdAt).include? k
     end
     result["owner"] = pr["repository"]["owner"]["login"]
     result["authorId"] = pr["author"]["id"]
@@ -82,7 +82,11 @@ module Github
       puts prefix.nil? ? s : prefix + s
     end.curry.call(options[:prefix])
 
-    puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{pr["headRefName"]}"
+    ref = pr["headRefName"]
+    if !["master", "develop"].include? pr["baseRefName"]
+      ref = "#{pr["baseRefName"]}..#{ref}"
+    end
+    puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{ref}"
     puts_with_prefix.call "#{pr["author"]} #{relative_time(pr["createdAt"])} (#{pr["createdAt"]})"
 
     if !pr["canMerge"]
