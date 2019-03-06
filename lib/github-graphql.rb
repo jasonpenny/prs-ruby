@@ -159,7 +159,7 @@ module GithubGraphql
     return query(qry, vars)
   end
 
-  def self.get_pull_requests_for_login(login)
+  def self.get_pull_requests_for_login(login, extra_filters)
     qry = <<-'GRAPHQL'
       query($queryString: String!) {
         search(query:$queryString, type: ISSUE, first: 100) {
@@ -233,7 +233,7 @@ module GithubGraphql
     GRAPHQL
 
     vars = {
-      queryString: "is:open is:pr author:#{login}"
+      queryString: "is:open is:pr author:#{login} #{extra_filters}"
     }
 
     return query(qry, vars)

@@ -8,8 +8,14 @@ if $PROGRAM_NAME == __FILE__
     exit(1)
   end
 
+  if ARGV.length > 0
+    extra_filters = ARGV[0]
+  else
+    extra_filters = ""
+  end
+
   login = Github.my_user_login()
 
-  prs = Github.pull_requests_for_login(login)
+  prs = Github.pull_requests_for_login(login, extra_filters)
   Github.puts_multiple_pull_requests(prs)
 end
