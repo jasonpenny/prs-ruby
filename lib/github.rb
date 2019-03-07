@@ -25,7 +25,13 @@ module Github
     result["author"] = name_and_login(pr["author"])
 
     result["reviews"] = pr["reviews"]["nodes"].inject({}) do |reviews, review|
-      reviews.merge({ name_and_login(review["author"]) => review["state"] })
+      key = name_and_login(review["author"])
+      if reviews[key] && review["state"] == "COMMENTED"
+        # if reviewer APPROVED and then COMMENTED, keep as APPROVED
+        reviews
+      else
+        reviews.merge({ key => review["state"] })
+      end
     end
 
     result["reviewRequests"] = pr["reviewRequests"]["nodes"].map do |rr|
