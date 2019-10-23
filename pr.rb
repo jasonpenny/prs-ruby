@@ -16,5 +16,8 @@ if $PROGRAM_NAME == __FILE__
   parsed = Github.parse_pull_request_url(ARGV[0])
 
   pr = Github.pull_request_by_number(parsed["org"], parsed["repo"], parsed["pr_number"].to_i)
+  if pr["isDraft"]
+    puts "\e[7m[DRAFT]\e[0m"
+  end
   Github.puts_pull_request(pr)
 end

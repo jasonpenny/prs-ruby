@@ -16,7 +16,7 @@ module Github
 
   def self._pr_data(pr)
     result = pr.select do |k, v|
-      %w(id url number headRefName baseRefName title createdAt).include? k
+      %w(id url number headRefName baseRefName title createdAt isDraft).include? k
     end
     result["owner"] = pr["repository"]["owner"]["login"]
     result["authorId"] = pr["author"]["id"]
@@ -73,6 +73,9 @@ module Github
   def self.puts_multiple_pull_requests(prs, options = {})
     prs.each_with_index do |pr, i|
       url = "\e[36m#{pr["url"]}\e[0m"
+      if pr["isDraft"]
+        url = "\e[7m[DRAFT]\e[0m #{url}"
+      end
       puts options[:prefix].nil? ? url : options[:prefix] + url
       puts_pull_request(pr, options)
 
