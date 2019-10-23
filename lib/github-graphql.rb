@@ -10,7 +10,8 @@ module GithubGraphql
     req = Net::HTTP::Post.new(
       GITHUB_URI,
       "Content-Type" => "application/json",
-      "Authorization" => "Bearer #{GITHUB_ACCESS_TOKEN}"
+      "Authorization" => "Bearer #{GITHUB_ACCESS_TOKEN}",
+      "Accept" => "application/vnd.github.shadow-cat-preview+json", # for isDraft
     )
     if !variables.nil?
       req.body = {query: query, variables: variables}.to_json
@@ -98,6 +99,7 @@ module GithubGraphql
             headRefName
             baseRefName
             mergeable
+            isDraft
             commits(last:1){
               nodes{
                 commit{
@@ -178,6 +180,7 @@ module GithubGraphql
                 headRefName
                 baseRefName
                 mergeable
+                isDraft
                 commits(last:1){
                   nodes{
                     commit{
