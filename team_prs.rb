@@ -52,12 +52,18 @@ if $PROGRAM_NAME == __FILE__
   end
 
   no_prs.each_with_index do |member, i|
-      puts "│   " + Github.name_and_login(member)
-      puts "│   " + "No open PRs"
-
-      if i < no_prs.size - 1
+    if i == 0
         puts "│   "
-      end
+        puts "├" + ("─" * 79)
+        puts "│   "
+    end
+
+    puts "│   " + Github.name_and_login(member)
+    puts "│   " + "No open PRs"
+
+    if i < no_prs.size - 1
+      puts "│   "
+    end
   end
   puts "│   "
   puts "└" + ("─" * 79)
