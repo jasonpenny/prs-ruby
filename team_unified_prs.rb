@@ -18,10 +18,17 @@ if $PROGRAM_NAME == __FILE__
   else
     team_name = ENV["GITHUB_TEAM"]
   end
+
   if ARGV.length > 1
-    extra_filters = ARGV[1]
+    skip_team_members = ARGV[1].split(',')
   else
-    extra_filters = ""
+    skip_team_members = []
+  end
+
+  if ARGV.length > 2
+    skip_pr_ids = ARGV[2].split(',')
+  else
+    skip_pr_ids = []
   end
 
   parsed_team = Github.parse_org_and_team(team_name)
@@ -34,37 +41,26 @@ if $PROGRAM_NAME == __FILE__
 
   puts "┌" + ("─" * 79)
   puts "│   "
-  no_prs = []
+  all_prs = {}
+
   team.each_with_index do |member, i|
-    prs = Github.open_pull_requests_for_author(member["login"], extra_filters).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
+    next if skip_team_members.include?(member["login"])
+    prs = Github.open_pull_requests_for_involves(member["login"]).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
 
-    if !prs.empty?
-      Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
-    else
-      no_prs << member
-    end
-
-    if !prs.empty? && i < team.size - 1
-      puts "│   "
-      puts "├" + ("─" * 79)
-      puts "│   "
+    for pr in prs
+      next if skip_pr_ids.include?(pr["url"])
+      all_prs[pr["url"]] = pr
     end
   end
 
-  no_prs.each_with_index do |member, i|
-    if i == 0
-        puts "│   "
-        puts "├" + ("─" * 79)
-        puts "│   "
-    end
+  prs = Github.open_pull_requests_for_team(team_name)
 
-    puts "│   " + Github.name_and_login(member)
-    puts "│   " + "No open PRs"
-
-    if i < no_prs.size - 1
-      puts "│   "
-    end
+  for pr in prs
+    next if skip_pr_ids.include?(pr["url"])
+    all_prs[pr["url"]] = pr
   end
+
+  Github.puts_multiple_pull_requests(all_prs.values, { prefix: "│   " })
   puts "│   "
   puts "└" + ("─" * 79)
 end

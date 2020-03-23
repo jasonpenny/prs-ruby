@@ -161,7 +161,7 @@ module GithubGraphql
     return query(qry, vars)
   end
 
-  def self.get_pull_requests_for_login(login, extra_filters)
+  def self.get_open_pull_requests_for_search(search)
     qry = <<-'GRAPHQL'
       query($queryString: String!) {
         search(query:$queryString, type: ISSUE, first: 100) {
@@ -236,10 +236,27 @@ module GithubGraphql
     GRAPHQL
 
     vars = {
-      queryString: "is:open is:pr author:#{login} #{extra_filters}"
+      queryString: "is:open is:pr #{search}"
     }
 
     return query(qry, vars)
+  end
+
+  def self.get_open_pull_requests_for_author(login, extra_filters="")
+    return get_open_pull_requests_for_search("author:#{login} #{extra_filters}")
+  end
+
+  def self.get_open_pull_requests_for_involves(login, extra_filters="")
+    # https://help.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests#search-by-a-user-thats-involved-in-an-issue-or-pull-request
+    # involves = OR between the author, assignee, mentions, and commenter
+    # ... not sure if it includes review-requested:#{login} -- seems like maybe yes?
+    return get_open_pull_requests_for_search("involves:#{login} #{extra_filters}")
+  end
+
+  def self.get_open_pull_requests_for_team(team, extra_filters="")
+    # team:#{org}/#{team_name}
+    # not sure if it also includes team-review-requested:#{org}/#{team_name} ?
+    return get_open_pull_requests_for_search("team:#{team} #{extra_filters}")
   end
 
   def self.request_review_on_pull_request(pr_id, user_ids)
