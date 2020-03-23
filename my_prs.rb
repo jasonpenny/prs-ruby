@@ -16,6 +16,6 @@ if $PROGRAM_NAME == __FILE__
 
   login = Github.my_user_login()
 
-  prs = Github.pull_requests_for_login(login, extra_filters)
+  prs = Github.open_pull_requests_for_author(login, extra_filters)
   Github.puts_multiple_pull_requests(prs)
 end

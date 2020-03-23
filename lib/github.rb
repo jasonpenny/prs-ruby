@@ -7,8 +7,22 @@ module Github
     return _pr_data(data["data"]["repository"]["pullRequest"])
   end
 
-  def self.pull_requests_for_login(login, extra_filters)
-    data = GithubGraphql.get_pull_requests_for_login(login, extra_filters)
+  def self.open_pull_requests_for_author(login, extra_filters="")
+    data = GithubGraphql.get_open_pull_requests_for_author(login, extra_filters)
+    return _map_pr_data_search(data)
+  end
+
+  def self.open_pull_requests_for_involves(login, extra_filters="")
+    data = GithubGraphql.get_open_pull_requests_for_involves(login, extra_filters)
+    return _map_pr_data_search(data)
+  end
+
+  def self.open_pull_requests_for_team(team, extra_filters="")
+    data = GithubGraphql.get_open_pull_requests_for_team(team, extra_filters)
+    return _map_pr_data_search(data)
+  end
+
+  def self._map_pr_data_search(data)
     return data["data"]["search"]["edges"].map do |edge|
       _pr_data(edge["node"])
     end
