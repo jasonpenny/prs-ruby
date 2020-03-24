@@ -22,6 +22,11 @@ module Github
     return _map_pr_data_search(data)
   end
 
+  def self.open_pull_requests_for_repo(repo, extra_filters="")
+    data = GithubGraphql.get_open_pull_requests_for_repo(repo, extra_filters)
+    return _map_pr_data_search(data)
+  end
+
   def self._map_pr_data_search(data)
     return data["data"]["search"]["edges"].map do |edge|
       _pr_data(edge["node"])
@@ -90,6 +95,7 @@ module Github
       if pr["isDraft"]
         url = "\e[7m[DRAFT]\e[0m #{url}"
       end
+      url = (i + 1).to_s + ". " + url if options[:indexed]
       puts options[:prefix].nil? ? url : options[:prefix] + url
       puts_pull_request(pr, options)
 

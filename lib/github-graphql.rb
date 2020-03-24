@@ -259,6 +259,10 @@ module GithubGraphql
     return get_open_pull_requests_for_search("team:#{team} #{extra_filters}")
   end
 
+  def self.get_open_pull_requests_for_repo(repo, extra_filters="")
+    return get_open_pull_requests_for_search("repo:#{repo} #{extra_filters}")
+  end
+
   def self.request_review_on_pull_request(pr_id, user_ids)
     qry = <<-'GRAPHQL'
       mutation($pullRequestId: ID!, $userIds: [ID!]) {

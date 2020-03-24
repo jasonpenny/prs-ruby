@@ -2,6 +2,18 @@
 
 require_relative "lib/github"
 
+def positional_arg_or_env(idx, env_var)
+  if ARGV.length > idx
+    return ARGV[idx]
+  else
+    return (ENV[env_var] || "")
+  end
+end
+
+def positional_arg_or_env_split(idx, env_var)
+  return positional_arg_or_env(idx, env_var).split(',')
+end
+
 if $PROGRAM_NAME == __FILE__
   if !ENV["GITHUB_ACCESS_TOKEN"]
     puts "GITHUB_ACCESS_TOKEN environment var needs to be set to a personal access token"
@@ -13,23 +25,10 @@ if $PROGRAM_NAME == __FILE__
     exit(2)
   end
 
-  if ARGV.length > 0
-    team_name = ARGV[0]
-  else
-    team_name = ENV["GITHUB_TEAM"]
-  end
-
-  if ARGV.length > 1
-    skip_team_members = ARGV[1].split(',')
-  else
-    skip_team_members = []
-  end
-
-  if ARGV.length > 2
-    skip_pr_ids = ARGV[2].split(',')
-  else
-    skip_pr_ids = []
-  end
+  team_name = positional_arg_or_env(0, "GITHUB_TEAM")
+  skip_team_members = positional_arg_or_env_split(1, "GITHUB_SKIP_TEAM_MEMBERS")
+  skip_pr_ids = positional_arg_or_env_split(2, "GITHUB_SKIP_PR_IDS")
+  team_repos = positional_arg_or_env_split(3, "GITHUB_TEAM_REPOS")
 
   parsed_team = Github.parse_org_and_team(team_name)
 
@@ -39,28 +38,29 @@ if $PROGRAM_NAME == __FILE__
     exit(3)
   end
 
-  puts "┌" + ("─" * 79)
-  puts "│   "
   all_prs = {}
 
-  team.each_with_index do |member, i|
-    next if skip_team_members.include?(member["login"])
-    prs = Github.open_pull_requests_for_involves(member["login"]).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
-
+  add_prs = proc do |prs|
     for pr in prs
       next if skip_pr_ids.include?(pr["url"])
       all_prs[pr["url"]] = pr
     end
   end
 
-  prs = Github.open_pull_requests_for_team(team_name)
-
-  for pr in prs
-    next if skip_pr_ids.include?(pr["url"])
-    all_prs[pr["url"]] = pr
+  team.each do |member|
+    next if skip_team_members.include?(member["login"])
+    add_prs.call(
+      Github.open_pull_requests_for_involves(member["login"]).reject do |pr|
+        pr["owner"].downcase != parsed_team["org"].downcase
+      end
+    )
   end
 
-  Github.puts_multiple_pull_requests(all_prs.values, { prefix: "│   " })
-  puts "│   "
-  puts "└" + ("─" * 79)
+  add_prs.call(Github.open_pull_requests_for_team(team_name))
+
+  team_repos.each do |repo|
+    add_prs.call(Github.open_pull_requests_for_repo(repo))
+  end
+
+  Github.puts_multiple_pull_requests(all_prs.values, { indexed: true })
 end
