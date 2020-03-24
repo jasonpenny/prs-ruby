@@ -2,6 +2,18 @@
 
 require_relative "lib/github"
 
+def positional_arg_or_env(idx, env_var)
+  if ARGV.length > idx
+    return ARGV[idx]
+  else
+    return (ENV[env_var] || "")
+  end
+end
+
+def positional_arg_or_env_split(idx, env_var)
+  return positional_arg_or_env(idx, env_var).split(',')
+end
+
 if $PROGRAM_NAME == __FILE__
   if !ENV["GITHUB_ACCESS_TOKEN"]
     puts "GITHUB_ACCESS_TOKEN environment var needs to be set to a personal access token"
@@ -13,23 +25,10 @@ if $PROGRAM_NAME == __FILE__
     exit(2)
   end
 
-  if ARGV.length > 0
-    team_name = ARGV[0]
-  else
-    team_name = ENV["GITHUB_TEAM"]
-  end
-
-  def add_split_arg_env(idx, env_var)
-    if ARGV.length > idx
-      return ARGV[idx].split(',')
-    else
-      return (ENV[env_var] || "").split(',')
-    end
-  end
-
-  skip_team_members = add_split_arg_env(1, "GITHUB_SKIP_TEAM_MEMBERS")
-  skip_pr_ids = add_split_arg_env(2, "GITHUB_SKIP_PR_IDS")
-  team_repos = add_split_arg_env(3, "GITHUB_TEAM_REPOS")
+  team_name = positional_arg_or_env(0, "GITHUB_TEAM")
+  skip_team_members = positional_arg_or_env_split(1, "GITHUB_SKIP_TEAM_MEMBERS")
+  skip_pr_ids = positional_arg_or_env_split(2, "GITHUB_SKIP_PR_IDS")
+  team_repos = positional_arg_or_env_split(3, "GITHUB_TEAM_REPOS")
 
   parsed_team = Github.parse_org_and_team(team_name)
 
