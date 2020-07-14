@@ -138,6 +138,7 @@ module GithubGraphql
               nodes {
                 author {
                   ...userFields
+                  ...botFields
                 }
                 state
               }
@@ -148,6 +149,9 @@ module GithubGraphql
 
       fragment userFields on User {
         name
+        login
+      }
+      fragment botFields on Bot {
         login
       }
     GRAPHQL
@@ -219,6 +223,7 @@ module GithubGraphql
                   nodes {
                     author {
                       ...userFields
+                      ...botFields
                     }
                     state
                   }
@@ -231,6 +236,9 @@ module GithubGraphql
 
       fragment userFields on User {
         name
+        login
+      }
+      fragment botFields on Bot {
         login
       }
     GRAPHQL
