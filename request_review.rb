@@ -35,5 +35,5 @@ if $PROGRAM_NAME == __FILE__
   puts "Requested reviews"
   puts ""
   pr = Github.pull_request_by_number(parsed["org"], parsed["repo"], parsed["pr_number"].to_i)
-  Github.puts_pull_request(pr)
+  Github.puts_pull_request(pr, { color: true })
 end

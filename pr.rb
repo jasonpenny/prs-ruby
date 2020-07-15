@@ -19,5 +19,5 @@ if $PROGRAM_NAME == __FILE__
   if pr["isDraft"]
     puts "\e[7m[DRAFT]\e[0m"
   end
-  Github.puts_pull_request(pr)
+  Github.puts_pull_request(pr, { color: true })
 end
