@@ -45,7 +45,7 @@ This will output all open PRs for members of the team, for repos that are in the
 ### View all Pull Requests involving any members of a github team
 
 ```sh
-./team_unified_prs.rb <org/team> <pr ids to skip> <specify the list of team repos>
+./team_unified_prs.rb <org/team> <team members to skip> <pr ids to skip> <team repos to include>
 
 # or
 export GITHUB_TEAM=<org/team>
@@ -54,7 +54,7 @@ export GITHUB_TEAM=<org/team>
 
 This will output all PRs opened by, commented on, requested reviews on, etc for any members of the team on any repos that are in the `org`, or for any PRs that are opened by anyone on repos that are listed as "owned" by the team.
 
-Additionally you can skip PRs using the 2nd arg or env var `GITHUB_SKIP_PR_IDS` and you can list the team repos with the 3rd arg or env var `GITHUB_TEAM_REPOS`, both are comma separated lists.
+Additionally you can skip team member PRs using the 2nd arg or env var `GITHUB_SKIP_TEAM_MEMBERS` or skip specific PRs using the 3rd arg or env var `GITHUB_SKIP_PR_IDS` and you can list the team repos to include with the 4th arg or env var `GITHUB_TEAM_REPOS`, both are comma separated lists.
 
 ---
 
