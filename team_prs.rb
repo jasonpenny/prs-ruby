@@ -39,7 +39,7 @@ if $PROGRAM_NAME == __FILE__
     prs = Github.open_pull_requests_for_author(member["login"], extra_filters).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
 
     if !prs.empty?
-      Github.puts_multiple_pull_requests(prs, { prefix: "│   ", color: true })
+      Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
     else
       no_prs << member
     end

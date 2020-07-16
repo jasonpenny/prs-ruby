@@ -62,5 +62,5 @@ if $PROGRAM_NAME == __FILE__
     add_prs.call(Github.open_pull_requests_for_repo(repo))
   end
 
-  Github.puts_multiple_pull_requests(all_prs.values, { indexed: true, color: false })
+  Github.puts_multiple_pull_requests(all_prs.values, { indexed: true })
 end
