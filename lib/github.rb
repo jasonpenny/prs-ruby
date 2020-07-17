@@ -91,9 +91,16 @@ module Github
 
   def self.puts_multiple_pull_requests(prs, options = {})
     prs.each_with_index do |pr, i|
-      url = "\e[36m#{pr["url"]}\e[0m"
-      if pr["isDraft"]
-        url = "\e[7m[DRAFT]\e[0m #{url}"
+      if STDOUT.isatty
+        url = "\e[36m#{pr["url"]}\e[0m"
+        if pr["isDraft"]
+          url = "\e[7m[DRAFT]\e[0m #{url}"
+        end
+      else
+        url = pr["url"]
+        if pr["isDraft"]
+          url = "[DRAFT] #{url}"
+        end
       end
       url = (i + 1).to_s + ". " + url if options[:indexed]
       puts options[:prefix].nil? ? url : options[:prefix] + url
@@ -111,19 +118,33 @@ module Github
       puts prefix.nil? ? s : prefix + s
     end.curry.call(options[:prefix])
 
+    color = STDOUT.isatty
+
     ref = pr["headRefName"]
     if !["master", "develop"].include? pr["baseRefName"]
       ref = "#{pr["baseRefName"]}..#{ref}"
     end
-    puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{ref}"
+    if color
+      puts_with_prefix.call "\e[1m#{pr["title"]}\e[0m #{ref}"
+    else
+      puts_with_prefix.call "#{pr["title"]} #{ref}"
+    end
     puts_with_prefix.call "#{pr["author"]} #{relative_time(pr["createdAt"])} (#{pr["createdAt"]})"
 
     if !pr["canMerge"]
-      puts_with_prefix.call " \e[91m\e[1m✘  Merge Conflict\e[0m"
+      if color
+        puts_with_prefix.call " \e[91m\e[1m✘  Merge Conflict\e[0m"
+      else
+        puts_with_prefix.call " ✘  Merge Conflict"
+      end
     end
 
     if !pr["checkFailures"].nil?
-      puts_with_prefix.call " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
+      if color
+        puts_with_prefix.call " \e[91m\e[1m✘  Failed checks:\e[0m #{pr["checkFailures"].join(", ")}"
+      else
+        puts_with_prefix.call " ✘  Failed checks: #{pr["checkFailures"].join(", ")}"
+      end
     end
 
     if (!pr["reviews"].empty?) || (!pr["reviewRequests"].empty?)
@@ -132,16 +153,28 @@ module Github
 
     pr["reviews"].each do |user, state|
       if state == "APPROVED"
-        puts_with_prefix.call " \e[92m\e[1m✔ \e[0m #{user}"
+        if color
+          puts_with_prefix.call " \e[92m\e[1m✔ \e[0m #{user}"
+        else
+          puts_with_prefix.call " ✔  #{user}"
+        end
       elsif state == "CHANGES_REQUESTED"
-        puts_with_prefix.call " \e[91m\e[1m±\e[0m  #{user}"
+        if color
+          puts_with_prefix.call " \e[91m\e[1m±\e[0m  #{user}"
+        else
+          puts_with_prefix.call " ±  #{user}"
+        end
       elsif state == "COMMENTED"
         puts_with_prefix.call "💬  #{user}"
       end
     end
 
     pr["reviewRequests"].each do |rr|
-      puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{rr["user"]}"
+      if color
+        puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{rr["user"]}"
+      else
+        puts_with_prefix.call " ●  #{rr["user"]}"
+      end
     end
   end
 
