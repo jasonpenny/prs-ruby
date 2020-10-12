@@ -38,6 +38,7 @@ module Github
       %w(id url number headRefName baseRefName title createdAt isDraft).include? k
     end
     result["owner"] = pr["repository"]["owner"]["login"]
+    result["repoArchived"] = pr["repository"]["isArchived"]
     result["authorId"] = pr["author"]["id"]
     result["authorLogin"] = pr["author"]["login"]
     result["authorName"] = pr["author"]["name"]
