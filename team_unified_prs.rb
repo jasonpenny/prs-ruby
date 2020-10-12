@@ -42,7 +42,7 @@ if $PROGRAM_NAME == __FILE__
 
   add_prs = proc do |prs|
     for pr in prs
-      next if skip_pr_ids.include?(pr["url"])
+      next if skip_pr_ids.include?(pr["url"]) || pr["archived"]
       all_prs[pr["url"]] = pr
     end
   end
@@ -62,5 +62,6 @@ if $PROGRAM_NAME == __FILE__
     add_prs.call(Github.open_pull_requests_for_repo(repo))
   end
 
-  Github.puts_multiple_pull_requests(all_prs.values, { indexed: true })
+  prs_reverse_date = all_prs.values.sort{|a,b| b["createdAt"] <=> a["createdAt"]}
+  Github.puts_multiple_pull_requests(prs_reverse_date, { indexed: true })
 end

@@ -175,6 +175,7 @@ module GithubGraphql
               ... on PullRequest {
                 id
                 repository {
+                  isArchived
                   owner {
                     login
                   }
