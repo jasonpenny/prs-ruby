@@ -55,7 +55,9 @@ module Github
     end
 
     result["reviewRequests"] = pr["reviewRequests"]["nodes"].map do |rr|
-      { "user" => name_and_login(rr["requestedReviewer"]) }
+      if !rr["requestedReviewer"].nil?
+        { "user" => name_and_login(rr["requestedReviewer"]) }
+      end
     end
 
     result["canMerge"] = pr["mergeable"] != "CONFLICTING"

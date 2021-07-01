@@ -2,6 +2,9 @@
 
 
 These scripts require a [personal access token](https://github.com/settings/tokens/) stored in the environment variable `GITHUB_ACCESS_TOKEN`
+The following scopes are required:
+- repo
+- read:org
 
 - generate one through the Github website
 - `export GITHUB_ACCESS_TOKEN=...`
