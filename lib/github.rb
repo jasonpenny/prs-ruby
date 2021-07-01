@@ -173,6 +173,8 @@ module Github
     end
 
     pr["reviewRequests"].each do |rr|
+      next if rr.nil?
+
       if color
         puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{rr["user"]}"
       else
