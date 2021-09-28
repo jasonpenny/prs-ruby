@@ -29,7 +29,7 @@ module Github
 
   def self._map_pr_data_search(data)
     return data["data"]["search"]["edges"].map do |edge|
-      _pr_data(edge["node"])
+      _pr_data(edge["node"]) unless edge.nil?
     end
   end
 

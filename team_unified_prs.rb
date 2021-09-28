@@ -51,7 +51,7 @@ if $PROGRAM_NAME == __FILE__
     next if skip_team_members.include?(member["login"])
     add_prs.call(
       Github.open_pull_requests_for_involves(member["login"]).reject do |pr|
-        pr["owner"].downcase != parsed_team["org"].downcase
+        pr.nil? || pr["owner"].downcase != parsed_team["org"].downcase
       end
     )
   end
