@@ -21,7 +21,7 @@ if $PROGRAM_NAME == __FILE__
   end
 
   counts
-    .sort_by { |_, val| -val }
+    .sort_by { |key, val| [-val, key] }
     .each do |(user, login), count|
     puts "#{count.to_s.rjust(2)} #{user.ljust(42)} https://github.com/#{ARGV[0]}/pulls?q=is%3Aopen+is%3Apr+author%3A#{login}+updated%3A%3C#{ARGV[1]}"
     end
