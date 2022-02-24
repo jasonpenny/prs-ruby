@@ -27,6 +27,11 @@ module Github
     return _map_pr_data_search(data)
   end
 
+  def self.all_pull_request_ids_for_repo(repo, extra_filters="")
+    data = GithubGraphql.get_any_pull_request_ids_for_repo("repo:#{repo} #{extra_filters}")
+    return data["data"]["search"]["edges"]
+  end
+
   def self._map_pr_data_search(data)
     return data["data"]["search"]["edges"].map do |edge|
       _pr_data(edge["node"]) unless edge.nil?
