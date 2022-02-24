@@ -19,7 +19,7 @@ if $PROGRAM_NAME == __FILE__
   puts s
   puts "-" * s.length
   n.downto(n - COUNT_TO_SHOW) do |release|
-    prs = Github.all_pull_request_ids_for_repo(ARGV[0], "base:release-#{release}")
+    prs = Github.all_pull_request_ids_for_repo(ARGV[0], "base:release-#{release} is:merged")
     puts "release-#{release.to_s.ljust(3)}: #{prs.length.to_s.rjust(3)}"
   end
 end
