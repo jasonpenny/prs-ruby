@@ -251,6 +251,28 @@ module GithubGraphql
     return query(qry, vars)
   end
 
+  def self.get_any_pull_request_ids_for_repo(search)
+    qry = <<-'GRAPHQL'
+      query($queryString: String!) {
+        search(query:$queryString, type: ISSUE, first: 100) {
+          edges {
+            node {
+              ... on PullRequest {
+                id
+              }
+            }
+          }
+        }
+      }
+    GRAPHQL
+
+    vars = {
+      queryString: "is:pr #{search}"
+    }
+
+    return query(qry, vars)
+  end
+
   def self.get_open_pull_requests_for_author(login, extra_filters="")
     return get_open_pull_requests_for_search("author:#{login} #{extra_filters}")
   end
