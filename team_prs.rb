@@ -14,9 +14,9 @@ if $PROGRAM_NAME == __FILE__
   end
 
   if ARGV.length > 0
-    team_name = ARGV[0]
+    team_names = ARGV[0]
   else
-    team_name = ENV["GITHUB_TEAM"]
+    team_names = ENV["GITHUB_TEAM"]
   end
   if ARGV.length > 1
     extra_filters = ARGV[1]
@@ -24,19 +24,27 @@ if $PROGRAM_NAME == __FILE__
     extra_filters = ""
   end
 
-  parsed_team = Github.parse_org_and_team(team_name)
+  team_members = []
+  orgs = []
+  team_names.split(",").each do |team_name|
+    parsed_team = Github.parse_org_and_team(team_name)
 
-  team = Github.team_members(parsed_team["org"], parsed_team["team_name"])
-  if team.nil?
-    $stderr.puts "Team [#{team_name}] could not be found"
-    exit(3)
+    team = Github.team_members(parsed_team["org"], parsed_team["team_name"])
+    if team.nil?
+      $stderr.puts "Team [#{team_name}] could not be found"
+      exit(3)
+    end
+
+    team_members |= team
+
+    orgs << parsed_team["org"].downcase
   end
 
   puts "┌" + ("─" * 79)
   puts "│   "
   no_prs = []
-  team.each_with_index do |member, i|
-    prs = Github.open_pull_requests_for_author(member["login"], extra_filters).reject { |pr| pr["owner"].downcase != parsed_team["org"].downcase }
+  team_members.each_with_index do |member, i|
+    prs = Github.open_pull_requests_for_author(member["login"], extra_filters).select { |pr| orgs.include?(pr["owner"].downcase) }
 
     if !prs.empty?
       Github.puts_multiple_pull_requests(prs, { prefix: "│   " })
@@ -44,7 +52,7 @@ if $PROGRAM_NAME == __FILE__
       no_prs << member
     end
 
-    if !prs.empty? && i < team.size - 1
+    if !prs.empty? && i < team_members.size - 1
       puts "│   "
       puts "├" + ("─" * 79)
       puts "│   "

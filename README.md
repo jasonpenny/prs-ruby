@@ -41,7 +41,9 @@ export GITHUB_TEAM=<org/team>
 ./team_prs.rb
 ```
 
-This will output all open PRs for members of the team, for repos that are in the `org`
+This will output all open PRs for members of the team, for repos that are in the `org`.
+
+The `GITHUB_TEAM` value may be a comma-delimited list of teams.
 
 ---
 
