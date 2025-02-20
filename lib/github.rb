@@ -1,4 +1,5 @@
 require "date"
+require 'active_support/core_ext/date_time'
 require_relative "github-graphql"
 
 module Github
@@ -137,7 +138,10 @@ module Github
     else
       puts_with_prefix.call "#{pr["title"]} #{ref}"
     end
-    puts_with_prefix.call "#{pr["author"]} #{relative_time(pr["createdAt"])} (#{pr["createdAt"]})"
+    formatted_created_at = DateTime.parse(pr["createdAt"])
+      .localtime
+      .strftime("%Y-%m-%d %I:%M %p")
+    puts_with_prefix.call "#{pr["author"]} #{relative_time(pr["createdAt"])} (#{formatted_created_at})"
 
     if !pr["canMerge"]
       if color
