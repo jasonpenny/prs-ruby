@@ -134,6 +134,17 @@ module GithubGraphql
                 }
               }
             }
+            timelineItems(last: 100, itemTypes: [REVIEW_REQUESTED_EVENT]) {
+              nodes {
+                ... on ReviewRequestedEvent {
+                  createdAt
+                  requestedReviewer {
+                    ... on User { login }
+                    ... on Team { login: slug }
+                  }
+                }
+              }
+            }
             reviews(last: 100) {
               nodes {
                 author {
@@ -216,6 +227,17 @@ module GithubGraphql
                       ... on Team {
                         name
                         login: slug
+                      }
+                    }
+                  }
+                }
+                timelineItems(last: 100, itemTypes: [REVIEW_REQUESTED_EVENT]) {
+                  nodes {
+                    ... on ReviewRequestedEvent {
+                      createdAt
+                      requestedReviewer {
+                        ... on User { login }
+                        ... on Team { login: slug }
                       }
                     }
                   }
