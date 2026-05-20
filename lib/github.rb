@@ -60,9 +60,15 @@ module Github
       end
     end
 
+    timeline_events = (pr["timelineItems"] && pr["timelineItems"]["nodes"]) || []
     result["reviewRequests"] = pr["reviewRequests"]["nodes"].map do |rr|
       if !rr["requestedReviewer"].nil?
-        { "user" => name_and_login(rr["requestedReviewer"]) }
+        login = rr["requestedReviewer"]["login"]
+        matching = timeline_events.select do |evt|
+          evt && evt["requestedReviewer"] && evt["requestedReviewer"]["login"] == login
+        end
+        created_at = matching.map { |e| e["createdAt"] }.max
+        { "user" => name_and_login(rr["requestedReviewer"]), "createdAt" => created_at }
       end
     end
 
@@ -181,13 +187,25 @@ module Github
       end
     end
 
+    user_width = pr["reviewRequests"].compact.map { |rr| rr["user"].length }.max || 0
+
     pr["reviewRequests"].each do |rr|
       next if rr.nil?
 
+      time_info = ""
+      if rr["createdAt"]
+        formatted = DateTime.parse(rr["createdAt"])
+          .localtime
+          .strftime("%Y-%m-%d %I:%M %p")
+        time_info = "  #{relative_time_hm(rr["createdAt"])} (#{formatted})"
+      end
+
+      user_padded = rr["user"].ljust(user_width)
+
       if color
-        puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{rr["user"]}"
+        puts_with_prefix.call " \e[33m\e[1m●\e[0m  #{user_padded}#{time_info}"
       else
-        puts_with_prefix.call " ●  #{rr["user"]}"
+        puts_with_prefix.call " ●  #{user_padded}#{time_info}"
       end
     end
   end
@@ -235,6 +253,16 @@ module Github
 
     diff *= 60
     return time_ago(diff, "second")
+  end
+
+  def self.relative_time_hm(dtStr)
+    total_minutes = ((DateTime.now.to_time - DateTime.parse(dtStr).to_time) / 60).to_i
+    total_minutes = 0 if total_minutes < 0
+    days = total_minutes / (60 * 24)
+    hours = (total_minutes / 60) % 24
+    minutes = total_minutes % 60
+    days_str = days > 0 ? format("%2dd", days) : "   "
+    format("%s%02dh%02dm ago", days_str, hours, minutes)
   end
 
   def self.time_ago(diff, period)
