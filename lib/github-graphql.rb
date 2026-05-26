@@ -267,7 +267,7 @@ module GithubGraphql
     GRAPHQL
 
     vars = {
-      queryString: "is:open is:pr #{search}"
+      queryString: "is:open is:pr archived:false #{search}"
     }
 
     return query(qry, vars)
