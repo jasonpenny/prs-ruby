@@ -1,5 +1,7 @@
 require "date"
+require 'active_support'
 require 'active_support/core_ext/date_time'
+ActiveSupport.to_time_preserves_timezone = true
 require_relative "github-graphql"
 
 module Github
